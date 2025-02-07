@@ -16,11 +16,11 @@ import { User } from './users/user.entity';
       ConfigModule.forRoot({ isGlobal: true }),
       TypeOrmModule.forRoot({
             type: 'mysql',
-            host: 'localhost',
+            host: 'mysql-machevoutsa.alwaysdata.net',
             port: 3306,
-            username: 'stevie',
-            password: 'password',
-            database: 'moviedb',
+            username: '398394',
+            password: '6H8e!37jH!VU4La',
+            database: 'machevoutsa_netflix',
             entities: [User, Reservation],
             synchronize: true, // Désactive en production
           }),
