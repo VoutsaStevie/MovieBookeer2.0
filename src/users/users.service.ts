@@ -1,11 +1,12 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-//import { RegisterDto, LoginDto } from 'users/dto/register.dto';
-//import { RegisterDto, LoginDto } from './dto';
-import { RegisterDto, LoginDto } from './dto/register.dto';
+//import { ConflictException} from '@nestjs/common';
+import { RegisterDto } from '../auth/dto/register.dto';
+import { LoginDto } from '../auth/dto/login.dto';
 
 interface User {
+  email: string;
   username: string;
   password: string;
   userId: number;
@@ -13,52 +14,49 @@ interface User {
 
 @Injectable()
 export class UsersService {
-  private users: User[] = []; // Tableau des utilisateurs
+  private users: User[] = [];
 
   constructor(private readonly jwtService: JwtService) {}
 
-  // Méthode findOne pour rechercher un utilisateur par son nom d'utilisateur
+
   async findOne(username: string): Promise<User | undefined> {
     return this.users.find(user => user.username === username);
   }
 
-  async register(registerDto: RegisterDto) {
-    // Vérifie si l'utilisateur existe déjà
-    const existingUser = this.users.find(user => user.username === registerDto.username);
-    if (existingUser) {
-      throw new ConflictException('Utilisateur déjà existant');
+
+    async register(registerDto: RegisterDto) {
+      const existingUser = this.users.find(user => user.email === registerDto.email);
+      if (existingUser) {
+        throw new ConflictException('Utilisateur déjà existant');
+      }
+
+      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+      const newUser = {
+        userId: this.users.length + 1,
+        username: registerDto.username,
+        email: registerDto.email,
+        password: hashedPassword,
+      };
+
+      this.users.push(newUser);
+      return newUser;
     }
 
-    // Hache le mot de passe
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-
-    // Crée un nouvel utilisateur
-    const newUser: User = {
-      username: registerDto.username,
-      password: hashedPassword,
-      userId: this.users.length + 1, // ID basique pour l'exemple
-    };
-
-    // Sauvegarde l'utilisateur
-    this.users.push(newUser);
-
-    return { message: 'Utilisateur créé avec succès' };
-  }
 
   async login(loginDto: LoginDto) {
-    // Vérifie si l'utilisateur existe
     const user = this.users.find(user => user.username === loginDto.username);
     if (!user) {
       throw new UnauthorizedException('Nom d\'utilisateur ou mot de passe incorrect');
     }
 
-    // Vérifie le mot de passe
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Nom d\'utilisateur ou mot de passe incorrect');
     }
 
-    // Génère un JWT
+
+
     const payload = { username: user.username, sub: user.userId };
     const token = this.jwtService.sign(payload);
 

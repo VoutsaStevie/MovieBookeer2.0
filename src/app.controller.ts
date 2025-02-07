@@ -20,5 +20,7 @@ export class AppController {
   @Post('register')
     register(@Body() body: any) {
       return this.usersService.register(body);
+     // return this.usersService.create(body);
+
     }
 }
